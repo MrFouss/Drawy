@@ -7,6 +7,7 @@ import android.graphics.Paint;
 import android.util.AttributeSet;
 import android.util.DisplayMetrics;
 import android.util.Log;
+import android.util.TypedValue;
 import android.view.MotionEvent;
 import android.view.View;
 
@@ -40,7 +41,9 @@ public class DrawView extends View {
 
         paint = new Paint();
         paint.setColor(context.getResources().getColor(R.color.paintDefaultColor));
-        paint.setStrokeWidth(20);
+        TypedValue value = new TypedValue();
+        context.getResources().getValue(R.dimen.paintDefaultThickness, value, false);
+        paint.setStrokeWidth(value.getFloat());
         paint.setStrokeCap(Paint.Cap.ROUND);
         paint.setStrokeJoin(Paint.Join.ROUND);
 
