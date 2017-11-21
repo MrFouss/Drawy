@@ -2,4 +2,8 @@
     <string name="app_name">Drawy</string>
     <string name="title_activity_launcher">LauncherActivity</string>
     <string name="title_activity_draw">DrawActivity</string>
+    <string name="toolbarColorSelection">Colors</string>
+    <string name="toolbarThicknessSelection">Thickness</string>
+    <string name="toolbarShapeSelection">Shape</string>
+    <string name="toolbarBrushSelection">Brush</string>
 </resources>

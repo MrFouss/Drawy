@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    >
+
+    <item
+        android:id="@+id/colorButton"
+        android:icon="@drawable/ic_color_palette"
+        android:title="@string/toolbarColorSelection"
+        android:visible="true"
+        app:showAsAction="ifRoom" />
+    <item
+        android:id="@+id/thicknessButton"
+        android:icon="@drawable/ic_line_thickness"
+        android:title="@string/toolbarThicknessSelection"
+        android:visible="true"
+        app:showAsAction="ifRoom" />
+    <item
+        android:id="@+id/shapeButton"
+        android:icon="@drawable/ic_star"
+        android:title="@string/toolbarShapeSelection"
+        android:visible="true"
+        app:showAsAction="ifRoom" />
+    <item
+        android:id="@+id/brushButton"
+        android:icon="@drawable/ic_brush"
+        android:title="@string/toolbarBrushSelection"
+        android:visible="true"
+        app:showAsAction="ifRoom" />
+</menu>
