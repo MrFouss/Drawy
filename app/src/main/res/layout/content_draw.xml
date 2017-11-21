@@ -8,4 +8,10 @@
     tools:context="fr.fouss.drawy.DrawActivity"
     tools:showIn="@layout/activity_draw">
 
+    <fr.fouss.drawy.DrawView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+    </fr.fouss.drawy.DrawView>
+
 </android.support.constraint.ConstraintLayout>

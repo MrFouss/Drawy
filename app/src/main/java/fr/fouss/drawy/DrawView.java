@@ -13,13 +13,18 @@ public class DrawView extends View {
     Bitmap drawing;
     Paint paint;
 
-    public DrawView(Context context, AttributeSet attrs, int defStyle) {
-        super(context, attrs, defStyle);
+    public DrawView(Context context) {
+        super(context);
         initView(context);
     }
 
-    public DrawView(Context context) {
-        super(context);
+    public DrawView(Context context, AttributeSet attrs) {
+        super(context, attrs);
+        initView(context);
+    }
+
+    public DrawView(Context context, AttributeSet attrs, int defStyle) {
+        super(context, attrs, defStyle);
         initView(context);
     }
 
@@ -36,6 +41,7 @@ public class DrawView extends View {
 
     @Override
     public void onDraw(Canvas canvas) {
+        super.onDraw(canvas);
         canvas.drawBitmap(drawing, 0, 0, null);
     }
 
