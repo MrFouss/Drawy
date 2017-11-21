@@ -18,8 +18,8 @@ public class DrawView extends View {
         initView(context);
     }
 
-    public DrawView(Context context, AttributeSet attrs) {
-        super(context, attrs);
+    public DrawView(Context context) {
+        super(context);
         initView(context);
     }
 
