@@ -3,7 +3,7 @@
     <color name="colorPrimary">#00695c</color>
     <color name="colorPrimaryDark">#003d33</color>
     <color name="colorPrimaryLight">#439889</color>
-    <color name="colorAccent">#FF4081</color>
+    <color name="colorAccent">#439889</color>
 
     <color name="canvasDefaultColor">#FFFFFF</color>
     <color name="paintDefaultColor">#000000</color>
