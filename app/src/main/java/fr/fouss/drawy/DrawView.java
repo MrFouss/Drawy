@@ -21,6 +21,7 @@ public class DrawView extends View {
 
     private float lastX, lastY;
     private Path brushPath;
+    private boolean validPath;
 
     private Shape currShape;
     private float shapeScaleX, shapeScaleY, shapeScale;
@@ -122,6 +123,8 @@ public class DrawView extends View {
 
         scaling = false;
         fingerNbr = 0;
+
+        validPath = false;
     }
 
     @Override
@@ -178,6 +181,7 @@ public class DrawView extends View {
                 brushPath.quadTo(lastX, lastY, (x + lastX)/2, (y + lastY)/2);
                 lastX = x;
                 lastY = y;
+                validPath = true;
             }
             invalidate();
             return true;
@@ -188,7 +192,11 @@ public class DrawView extends View {
             float dy = Math.abs(y - lastY);
             brushPath.quadTo(lastX, lastY, (x + lastX)/2, (y + lastY)/2);
             canvas.drawPath(brushPath, paint);
-            canvas.drawPoint(x, y, paint);
+            if (!validPath) {
+                canvas.drawPoint(x, y, paint);
+            } else {
+                validPath = false;
+            }
             brushPath.reset();
             lastX = x;
             lastY = y;
