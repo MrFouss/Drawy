@@ -5,6 +5,8 @@ import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.Path;
+import android.graphics.PathEffect;
 import android.graphics.Rect;
 import android.util.AttributeSet;
 import android.util.DisplayMetrics;
@@ -21,6 +23,7 @@ public class DrawView extends View {
     Mode mode;
 
     float lastX, lastY;
+    Path brushPath;
 
     Shape currShape;
     float shapeScaleX, shapeScaleY;
@@ -28,6 +31,8 @@ public class DrawView extends View {
 
     public enum Mode {BRUSH, SHAPE}
     public enum Shape {CIRCLE, SQUARE}
+
+    private static final float TOUCH_TOLERANCE = 4;
 
     private ScaleGestureDetector scaleDetector;
 
@@ -87,6 +92,7 @@ public class DrawView extends View {
         paint.setStrokeWidth(20.0f);
         paint.setStrokeCap(Paint.Cap.ROUND);
         paint.setStrokeJoin(Paint.Join.ROUND);
+        paint.setStyle(Paint.Style.STROKE);
 
         canvas = new Canvas(drawing);
 
@@ -94,7 +100,7 @@ public class DrawView extends View {
         lastY = -1;
 
         mode = Mode.BRUSH;
-        setMode(Mode.SHAPE);
+        setMode(Mode.BRUSH);
 
         currShape = Shape.SQUARE;
         shapeScaleX = 0.5f;
@@ -103,12 +109,15 @@ public class DrawView extends View {
 //        shapeY = height/2;
 
         scaleDetector = new ScaleGestureDetector(context, new ScaleListener());
+
+        brushPath = new Path();
     }
 
     @Override
     public void onDraw(Canvas canvas) {
         super.onDraw(canvas);
         canvas.drawBitmap(drawing, 0, 0, null);
+        canvas.drawPath(brushPath, paint);
         drawShape(canvas);
     }
 
@@ -149,19 +158,31 @@ public class DrawView extends View {
             float y = event.getY();
             lastX = x;
             lastY = y;
+            brushPath.reset();
+            brushPath.moveTo(x, y);
             return true;
         } else if (event.getAction() == MotionEvent.ACTION_MOVE) {
             float x = event.getX();
             float y = event.getY();
-            canvas.drawLine(lastX, lastY, x, y, paint);
-            lastX = x;
-            lastY = y;
+            float dx = Math.abs(x - lastX);
+            float dy = Math.abs(y - lastY);
+            if (dx >= TOUCH_TOLERANCE || dy >= TOUCH_TOLERANCE) {
+                brushPath.quadTo(lastX, lastY, (x + lastX)/2, (y + lastY)/2);
+                lastX = x;
+                lastY = y;
+            }
             invalidate();
             return true;
         } else if (event.getAction() == MotionEvent.ACTION_UP) {
             float x = event.getX();
             float y = event.getY();
-            canvas.drawPoint(x, y, paint);
+            float dx = Math.abs(x - lastX);
+            float dy = Math.abs(y - lastY);
+            if (dx >= TOUCH_TOLERANCE || dy >= TOUCH_TOLERANCE) {
+                brushPath.quadTo(lastX, lastY, (x + lastX)/2, (y + lastY)/2);
+                lastX = x;
+                lastY = y;
+            }
             invalidate();
             return true;
         } else {
