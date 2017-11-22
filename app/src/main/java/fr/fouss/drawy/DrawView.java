@@ -46,6 +46,10 @@ public class DrawView extends View {
 
     public void setMode(Mode mode) {
         this.mode = mode;
+        if (mode == Mode.SHAPE) {
+            shapeX = canvas.getWidth()/2;
+            shapeY = canvas.getHeight()/2;
+        }
     }
 
     public void anchorShape() {
@@ -75,13 +79,14 @@ public class DrawView extends View {
         lastX = -1;
         lastY = -1;
 
-        mode = Mode.SHAPE;
+        mode = Mode.BRUSH;
+        setMode(Mode.SHAPE);
 
         currShape = Shape.SQUARE;
-        shapeScaleX = 1;
+        shapeScaleX = 0.5f;
         shapeScaleY = 1;
-        shapeX = -1;
-        shapeY = -1;
+//        shapeX = width/2;
+//        shapeY = height/2;
 
         scaleDetector = new ScaleGestureDetector(context, new ScaleListener());
     }
