@@ -8,11 +8,11 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/AppTheme">
+        android:theme="@style/Drawy">
         <activity
             android:name=".LauncherActivity"
             android:label="@string/title_activity_launcher"
-            android:theme="@style/AppTheme.NoActionBar">
+            android:theme="@style/Drawy.NoActionBar">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -23,7 +23,7 @@
             android:name=".DrawActivity"
             android:label="@string/title_activity_draw"
             android:parentActivityName=".LauncherActivity"
-            android:theme="@style/AppTheme.NoActionBar">
+            android:theme="@style/Drawy.NoActionBar">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="fr.fouss.drawy.LauncherActivity" />

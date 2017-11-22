@@ -1,32 +1,21 @@
 package fr.fouss.drawy;
 
-import android.content.DialogInterface;
 import android.os.Bundle;
-import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.TypedValue;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.LinearLayout;
-import android.widget.Toast;
+import android.widget.SeekBar;
 
 import com.flask.colorpicker.ColorPickerView;
-import com.flask.colorpicker.OnColorSelectedListener;
-import com.flask.colorpicker.builder.ColorPickerClickListener;
 import com.flask.colorpicker.builder.ColorPickerDialogBuilder;
 
 public class DrawActivity extends AppCompatActivity {
 
     private DrawView drawView;
-
-    private MenuItem toolbarColor;
-    private MenuItem toolbarThickness;
-    private MenuItem toolbarShape;
-    private MenuItem toolbarBrush;
-
-    private int drawingColor;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -38,33 +27,36 @@ public class DrawActivity extends AppCompatActivity {
         assert getSupportActionBar() != null;
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
-        drawingColor = 0xffffffff;
-
         drawView = findViewById(R.id.drawView);
-        drawView.setBrushColor(0xff000000);
+        drawView.resetCanvas(getResources().getColor(R.color.canvasDefaultColor));
+        drawView.setBrushColor(getResources().getColor(R.color.paintDefaultColor));
+        TypedValue value = new TypedValue();
+        getResources().getValue(R.dimen.paintDefaultThickness, value, false);
+        drawView.setBrushThickness((int) value.getFloat());
+
+        SeekBar thicknessSeekbar = findViewById(R.id.thicknessSeekbar);
+        thicknessSeekbar.setProgress(drawView.getBrushThickness());
+        thicknessSeekbar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                drawView.setBrushThickness(progress);
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {}
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {}
+        });
     }
 
-    /**
-     * When creating the toolbar
-     * @param menu
-     * @return
-     */
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.draw_menu, menu);
-        toolbarColor = menu.findItem(R.id.colorButton);
-        toolbarThickness = menu.findItem(R.id.thicknessButton);
-        toolbarShape = menu.findItem(R.id.shapeButton);
-        toolbarBrush = menu.findItem(R.id.brushButton);
         return true;
     }
 
-    /**
-     * When a menu item in the toolbar is clicked
-     * @param item
-     * @return
-     */
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
@@ -72,28 +64,16 @@ public class DrawActivity extends AppCompatActivity {
                 ColorPickerDialogBuilder
                         .with(this)
                         .setTitle("Choose a color")
-                        .initialColor(drawingColor)
+                        .initialColor(drawView.getBrushColor())
                         .wheelType(ColorPickerView.WHEEL_TYPE.CIRCLE)
                         .density(10)
-                        .showAlphaSlider(false)
+                        .showAlphaSlider(true)
                         .showLightnessSlider(true)
                         .showColorEdit(false)
                         .showColorPreview(false)
-                        .setOnColorSelectedListener(new OnColorSelectedListener() {
-                            @Override
-                            public void onColorSelected(int selectedColor) {}
-                        })
-                        .setPositiveButton("Ok", new ColorPickerClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int selectedColor, Integer[] allColors) {
-                                drawingColor = selectedColor;
-                                drawView.setBrushColor(drawingColor);
-                            }
-                        })
-                        .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {}
-                        })
+                        .setOnColorSelectedListener(selectedColor -> {})
+                        .setPositiveButton("Ok", (dialog, selectedColor, allColors) -> drawView.setBrushColor(selectedColor))
+                        .setNegativeButton("Cancel", (dialog, which) -> {})
                         .build()
                         .show();
                 return true;

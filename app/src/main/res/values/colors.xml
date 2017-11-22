@@ -2,9 +2,11 @@
 <resources>
     <color name="colorPrimary">#00695c</color>
     <color name="colorPrimaryDark">#003d33</color>
-    <color name="colorPrimaryLight">#439889</color>
-    <color name="colorAccent">#439889</color>
+    <color name="colorAccent">#b71c1c</color>
 
     <color name="canvasDefaultColor">#FFFFFF</color>
     <color name="paintDefaultColor">#000000</color>
+
+    <color name="gray300">#e0e0e0</color>
+    <color name="black">#000000</color>
 </resources>
