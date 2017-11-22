@@ -16,28 +16,30 @@
     <LinearLayout
         android:id="@+id/thicknessContainer"
         android:orientation="horizontal"
-        android:visibility="invisible"
+        android:visibility="visible"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:padding="@dimen/fab_margin"
-        android:background="@color/colorPrimaryLight"
+        android:background="@color/gray300"
         android:layout_gravity="center_horizontal|top" >
 
         <TextView
-            android:id="@+id/textView"
+            android:id="@+id/thicknessLabel"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/thicknessLabel" />
+            android:textColor="@color/black"
+            android:text="@string/thicknessLabel"
+            android:padding="@dimen/fab_margin" />
 
         <SeekBar
-            android:id="@+id/seekBar"
-            style="@style/Widget.AppCompat.SeekBar.Discrete"
+            android:id="@+id/thicknessSeekbar"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:max="10"
-            android:progress="1" />
-            <!--android:thumb="@drawable/ic_add" />-->
+            android:color="@color/colorAccent"
+            android:max="150"
+            android:progress="4"
+            android:paddingTop="@dimen/fab_margin"
+            android:paddingBottom="@dimen/fab_margin" />
     </LinearLayout>
 
 </FrameLayout>

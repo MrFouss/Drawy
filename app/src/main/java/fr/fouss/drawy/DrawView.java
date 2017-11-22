@@ -30,8 +30,8 @@ public class DrawView extends View {
     private boolean scaling;
     private int fingerNbr;
 
-    public enum Mode {BRUSH, SHAPE};
-    public enum Shape {CIRCLE, SQUARE};
+    public enum Mode {BRUSH, SHAPE}
+    public enum Shape {CIRCLE, SQUARE}
 
     private static final float TOUCH_TOLERANCE = 4;
 
@@ -42,12 +42,24 @@ public class DrawView extends View {
         initView(context);
     }
 
+    public void resetCanvas(int color) {
+        paint.setColor(color);
+    }
+
     public void setBrushColor(int color) {
         paint.setColor(color);
     }
 
-    public void setBrushThickness(float thickness) {
+    public int getBrushColor() {
+        return paint.getColor();
+    }
+
+    public void setBrushThickness(int thickness) {
         paint.setStrokeWidth(thickness);
+    }
+
+    public int getBrushThickness() {
+        return (int) paint.getStrokeWidth();
     }
 
     public void setMode(Mode mode) {
@@ -56,6 +68,10 @@ public class DrawView extends View {
             shapeX = canvas.getWidth()/2;
             shapeY = canvas.getHeight()/2;
         }
+    }
+
+    public Mode getMode() {
+        return this.mode;
     }
 
     public void anchorShape() {
@@ -70,13 +86,11 @@ public class DrawView extends View {
         int height = metrics.heightPixels;
 
         drawing = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_4444);
-        drawing.eraseColor(context.getResources().getColor(R.color.canvasDefaultColor));
+        drawing.eraseColor(0xffffffff);
 
         paint = new Paint();
-        paint.setColor(context.getResources().getColor(R.color.paintDefaultColor));
-        TypedValue value = new TypedValue();
-        context.getResources().getValue(R.dimen.paintDefaultThickness, value, false);
-        paint.setStrokeWidth(value.getFloat());
+        paint.setColor(0xff000000);
+        paint.setStrokeWidth(20.0f);
         paint.setStrokeCap(Paint.Cap.ROUND);
         paint.setStrokeJoin(Paint.Join.ROUND);
         paint.setStyle(Paint.Style.STROKE);
