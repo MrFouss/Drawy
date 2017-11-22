@@ -3,11 +3,8 @@ package fr.fouss.drawy;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
-import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Path;
-import android.graphics.PathEffect;
-import android.graphics.Rect;
 import android.util.AttributeSet;
 import android.util.DisplayMetrics;
 import android.util.Log;
@@ -17,17 +14,21 @@ import android.view.ScaleGestureDetector;
 import android.view.View;
 
 public class DrawView extends View {
-    Bitmap drawing;
-    Canvas canvas;
-    Paint paint;
-    Mode mode;
+    private Bitmap drawing;
+    private Canvas canvas;
+    private Paint paint;
+    private Mode mode;
 
-    float lastX, lastY;
-    Path brushPath;
+    private float lastX, lastY;
+    private Path brushPath;
 
-    Shape currShape;
-    float shapeScaleX, shapeScaleY;
-    float shapeX, shapeY;
+    private Shape currShape;
+    private float shapeScaleX, shapeScaleY, shapeScale;
+    private float shapeX, shapeY;
+    private boolean pointer1Down, pointer2Down;
+    private int pointer1Id, pointer2Id;
+    private boolean scaling;
+    private int fingerNbr;
 
     public enum Mode {BRUSH, SHAPE}
     public enum Shape {CIRCLE, SQUARE}
@@ -100,17 +101,27 @@ public class DrawView extends View {
         lastY = -1;
 
         mode = Mode.BRUSH;
-        setMode(Mode.BRUSH);
+        setMode(Mode.SHAPE);
 
-        currShape = Shape.SQUARE;
-        shapeScaleX = 0.5f;
+        currShape = Shape.CIRCLE;
+        shapeScaleX = 1;
         shapeScaleY = 1;
-//        shapeX = width/2;
-//        shapeY = height/2;
+        shapeX = width/2;
+        shapeY = height/2;
+        shapeScale = 1;
 
         scaleDetector = new ScaleGestureDetector(context, new ScaleListener());
 
         brushPath = new Path();
+
+        pointer1Down = false;
+        pointer2Down = false;
+
+        pointer1Id = -1;
+        pointer2Id = -1;
+
+        scaling = false;
+        fingerNbr = 0;
     }
 
     @Override
@@ -123,12 +134,9 @@ public class DrawView extends View {
 
     private void drawShape(Canvas canvas) {
         if (mode == Mode.SHAPE) {
-            canvas.setMatrix(null);
-            canvas.scale(shapeScaleX, shapeScaleY, shapeX, shapeY);
-            canvas.translate(shapeX, shapeY);
             switch (currShape) {
                 case CIRCLE:
-                    canvas.drawCircle(0, 0, 150, paint);
+                    canvas.drawCircle(shapeX, shapeY, 150*shapeScale, paint);
                 case SQUARE:
                     canvas.drawRect(-150, -150, 150, 150, paint);
             }
@@ -158,8 +166,8 @@ public class DrawView extends View {
             float y = event.getY();
             lastX = x;
             lastY = y;
-            brushPath.reset();
             brushPath.moveTo(x, y);
+            invalidate();
             return true;
         } else if (event.getAction() == MotionEvent.ACTION_MOVE) {
             float x = event.getX();
@@ -178,11 +186,12 @@ public class DrawView extends View {
             float y = event.getY();
             float dx = Math.abs(x - lastX);
             float dy = Math.abs(y - lastY);
-            if (dx >= TOUCH_TOLERANCE || dy >= TOUCH_TOLERANCE) {
-                brushPath.quadTo(lastX, lastY, (x + lastX)/2, (y + lastY)/2);
-                lastX = x;
-                lastY = y;
-            }
+            brushPath.quadTo(lastX, lastY, (x + lastX)/2, (y + lastY)/2);
+            canvas.drawPath(brushPath, paint);
+            canvas.drawPoint(x, y, paint);
+            brushPath.reset();
+            lastX = x;
+            lastY = y;
             invalidate();
             return true;
         } else {
@@ -191,15 +200,87 @@ public class DrawView extends View {
     }
 
     public boolean onTouchEventShape(MotionEvent event) {
-        scaleDetector.onTouchEvent(event);
-        if (event.getAction() == MotionEvent.ACTION_DOWN
-                || event.getAction() == MotionEvent.ACTION_MOVE
-                || event.getAction() == MotionEvent.ACTION_UP) {
+        int index = event.getActionIndex();
+        int id = event.getPointerId(index);
+        int actionMasked = event.getActionMasked();
+//
+//        switch (actionMasked) {
+//            case MotionEvent.ACTION_DOWN: {
+//
+//                break;
+//            }
+//            case MotionEvent.ACTION_POINTER_DOWN: {
+//                // TODO use data
+//                break;
+//            }
+//            case MotionEvent.ACTION_MOVE: { // a pointer was moved
+//                // TODO use data
+//                break;
+//            }
+//            case MotionEvent.ACTION_UP:
+//            case MotionEvent.ACTION_POINTER_UP:
+//            case MotionEvent.ACTION_CANCEL: {
+//                // TODO use data
+//                break;
+//            }
+//        }
+//        if (pointer1Id == -1) {
+//            pointer1Id = id;
+//        } else if (pointer2Id == -1) {
+//            pointer2Id = id;
+//        }
+//
+//        if (id == pointer1Id) {
+//
+//        } else if (id == pointer2Id) {
+//
+//        }
+
+
+        Log.i("DrawView", "onTouchEventShape: " + event.getActionMasked());
+//
+        if (event.getActionMasked() == MotionEvent.ACTION_POINTER_DOWN
+                || event.getActionMasked() == MotionEvent.ACTION_DOWN) {
+            fingerNbr++;
+        }
+
+        if (event.getActionMasked() == MotionEvent.ACTION_POINTER_UP
+                || event.getActionMasked() == MotionEvent.ACTION_UP) {
+            fingerNbr--;
+        }
+
+        if (fingerNbr > 1) {
+            scaling = true;
+        } else if (fingerNbr == 0) {
+            scaling = false;
+        }
+
+        if (scaling) {
+            shapeX = lastX;
+            shapeY = lastY;
+            scaleDetector.onTouchEvent(event);
+            invalidate();
+            return true;
+        } else if (event.getAction() == MotionEvent.ACTION_DOWN) {
             float x = event.getX();
             float y = event.getY();
             shapeX = x;
             shapeY = y;
+            lastX = x;
+            lastY = y;
+            pointer1Id = id;
             invalidate();
+            return true;
+        } else if (event.getActionMasked() == MotionEvent.ACTION_MOVE) {
+            if (id == pointer1Id && !scaling) {
+                float x = event.getX();
+                float y = event.getY();
+                shapeX = x;
+                shapeY = y;
+                invalidate();
+            }
+            return true;
+        } else if (event.getAction() == MotionEvent.ACTION_UP) {
             return true;
         } else {
             return super.onTouchEvent(event);
@@ -220,6 +301,7 @@ public class DrawView extends View {
             } else {
                 shapeScaleY *= detector.getCurrentSpanY()/detector.getPreviousSpanY();
             }
+            shapeScale *= detector.getScaleFactor();
             return true;
         }
     }
