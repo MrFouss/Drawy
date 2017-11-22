@@ -36,7 +36,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:color="@color/colorAccent"
-            android:max="150"
+            android:max="200"
             android:progress="4"
             android:paddingTop="@dimen/fab_margin"
             android:paddingBottom="@dimen/fab_margin" />
