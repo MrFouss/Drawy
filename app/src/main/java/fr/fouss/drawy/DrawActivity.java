@@ -103,8 +103,10 @@ public class DrawActivity extends AppCompatActivity {
                         ? View.INVISIBLE : View.VISIBLE);
                 return true;
             case R.id.shapeButton :
+                drawView.setMode(DrawView.Mode.SHAPE);
                 return true;
             case R.id.brushButton :
+                drawView.setMode(DrawView.Mode.BRUSH);
                 return true;
             default :
                 return super.onOptionsItemSelected(item);
