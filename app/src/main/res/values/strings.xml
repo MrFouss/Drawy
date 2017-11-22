@@ -6,4 +6,5 @@
     <string name="toolbarThicknessSelection">Thickness</string>
     <string name="toolbarShapeSelection">Shape</string>
     <string name="toolbarBrushSelection">Brush</string>
+    <string name="thicknessLabel">Thickness</string>
 </resources>

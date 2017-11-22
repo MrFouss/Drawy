@@ -9,6 +9,7 @@ import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.LinearLayout;
 import android.widget.Toast;
 
 import com.flask.colorpicker.ColorPickerView;
@@ -17,6 +18,8 @@ import com.flask.colorpicker.builder.ColorPickerClickListener;
 import com.flask.colorpicker.builder.ColorPickerDialogBuilder;
 
 public class DrawActivity extends AppCompatActivity {
+
+    private DrawView drawView;
 
     private MenuItem toolbarColor;
     private MenuItem toolbarThickness;
@@ -36,6 +39,9 @@ public class DrawActivity extends AppCompatActivity {
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
         drawingColor = 0xffffffff;
+
+        drawView = findViewById(R.id.drawView);
+        drawView.setBrushColor(0xff000000);
     }
 
     /**
@@ -75,14 +81,13 @@ public class DrawActivity extends AppCompatActivity {
                         .showColorPreview(false)
                         .setOnColorSelectedListener(new OnColorSelectedListener() {
                             @Override
-                            public void onColorSelected(int selectedColor) {
-                            }
+                            public void onColorSelected(int selectedColor) {}
                         })
                         .setPositiveButton("Ok", new ColorPickerClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int selectedColor, Integer[] allColors) {
-                                Toast.makeText(DrawActivity.this, "setDrawingColor: 0x" + Integer.toHexString(selectedColor), Toast.LENGTH_SHORT).show();
                                 drawingColor = selectedColor;
+                                drawView.setBrushColor(drawingColor);
                             }
                         })
                         .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
@@ -93,6 +98,9 @@ public class DrawActivity extends AppCompatActivity {
                         .show();
                 return true;
             case R.id.thicknessButton :
+                LinearLayout thicknessContainer = findViewById(R.id.thicknessContainer);
+                thicknessContainer.setVisibility(thicknessContainer.getVisibility() == View.VISIBLE
+                        ? View.INVISIBLE : View.VISIBLE);
                 return true;
             case R.id.shapeButton :
                 return true;
