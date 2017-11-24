@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    >
+    xmlns:android="http://schemas.android.com/apk/res/android">
 
     <item
         android:id="@+id/colorButton"
@@ -16,15 +15,22 @@
         android:visible="true"
         app:showAsAction="ifRoom" />
     <item
-        android:id="@+id/shapeButton"
-        android:icon="@drawable/ic_star"
-        android:title="@string/toolbarShapeSelection"
+        android:id="@+id/insertImageButton"
+        android:icon="@drawable/ic_image"
+        android:title="@string/toolbarInsertImage"
         android:visible="true"
         app:showAsAction="ifRoom" />
+
     <item
-        android:id="@+id/brushButton"
-        android:icon="@drawable/ic_brush"
-        android:title="@string/toolbarBrushSelection"
-        android:visible="true"
+        android:id="@+id/cancelImageButton"
+        android:icon="@drawable/ic_clear"
+        android:title="@string/toolbarCancelImage"
+        android:visible="false"
+        app:showAsAction="ifRoom" />
+    <item
+        android:id="@+id/confirmImageButton"
+        android:icon="@drawable/ic_check"
+        android:title="@string/toolbarConfirmImage"
+        android:visible="false"
         app:showAsAction="ifRoom" />
 </menu>

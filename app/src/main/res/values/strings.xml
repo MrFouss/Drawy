@@ -1,10 +1,18 @@
 <resources>
     <string name="app_name">Drawy</string>
+
     <string name="title_activity_launcher">Drawy</string>
     <string name="title_activity_draw">DrawActivity</string>
+
+    <!-- Menu labels -->
+    <string name="open_an_image">Open an image</string>
+
+    <!-- Drawing toolbar -->
     <string name="toolbarColorSelection">Colors</string>
     <string name="toolbarThicknessSelection">Thickness</string>
-    <string name="toolbarShapeSelection">Shape</string>
-    <string name="toolbarBrushSelection">Brush</string>
+    <string name="toolbarInsertImage">Insert an image</string>
+    <string name="toolbarCancelImage">Cancel the image</string>
+    <string name="toolbarConfirmImage">Confirm image position</string>
+
     <string name="thicknessLabel">Thickness</string>
 </resources>

@@ -44,7 +44,11 @@ public class DrawView extends View {
     }
 
     public void resetCanvas(int color) {
-        paint.setColor(color);
+        drawing.eraseColor(color);
+    }
+
+    public void resetCanvas(Bitmap bitmap) {
+        drawing = bitmap;
     }
 
     public void setBrushColor(int color) {
@@ -101,8 +105,7 @@ public class DrawView extends View {
         lastX = -1;
         lastY = -1;
 
-        mode = Mode.BRUSH;
-        setMode(Mode.SHAPE);
+        setMode(Mode.BRUSH);
 
         currShape = Shape.CIRCLE;
         shapeScaleX = 1;

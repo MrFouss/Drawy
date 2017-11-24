@@ -16,7 +16,7 @@
     <LinearLayout
         android:id="@+id/thicknessContainer"
         android:orientation="horizontal"
-        android:visibility="visible"
+        android:visibility="invisible"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@color/gray300"
