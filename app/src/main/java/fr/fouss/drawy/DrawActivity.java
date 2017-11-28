@@ -1,11 +1,16 @@
 package fr.fouss.drawy;
 
+import android.Manifest;
+import android.annotation.SuppressLint;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
+import android.support.annotation.NonNull;
+import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
@@ -30,6 +35,9 @@ import java.util.Date;
 public class DrawActivity extends AppCompatActivity {
 
     private static final int FILE_SELECTION_CODE = 1337;
+
+    private static final int WRITE_EXTERNAL_STORAGE_PERMISSION_RETURN_CODE = 7357;
+
     private DrawView drawView;
 
     private MenuItem toolbarColorButton;
@@ -40,6 +48,8 @@ public class DrawActivity extends AppCompatActivity {
     private MenuItem toolbarConfirmImageButton;
     private LinearLayout thicknessContainer;
 
+    private Boolean writeExternalStoragePermission;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -49,6 +59,9 @@ public class DrawActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
         assert getSupportActionBar() != null;
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+
+        writeExternalStoragePermission = ActivityCompat.checkSelfPermission(this,
+                Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED;
 
         drawView = findViewById(R.id.drawView);
 
@@ -132,15 +145,26 @@ public class DrawActivity extends AppCompatActivity {
                 showFileChooser();
                 return true;
             case R.id.saveImageButton:
-                saveImage();
+                if (!writeExternalStoragePermission) {
+                    ActivityCompat.requestPermissions(this,
+                            new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                            WRITE_EXTERNAL_STORAGE_PERMISSION_RETURN_CODE);
+                    Toast.makeText(this, "Please try to save your image again", Toast.LENGTH_SHORT).show();
+                    return true;
+                }
 
-                AlertDialog.Builder builder = new AlertDialog.Builder(this);
-                builder.setMessage(getString(R.string.dialog_content_quit_on_save))
-                        .setTitle(getString(R.string.dialog_title_quit_on_save));
-                builder.setPositiveButton("Yes", (dialog, id) -> finish());
-                builder.setNegativeButton("No", (dialog, id) -> {});
-                AlertDialog dialog = builder.create();
-                dialog.show();
+                if (!saveImage()) {
+                    Toast.makeText(this, "Something bad happened while saving the image...", Toast.LENGTH_SHORT).show();
+                } else {
+                    AlertDialog.Builder builder = new AlertDialog.Builder(this);
+                    builder.setMessage(getString(R.string.dialog_content_quit_on_save))
+                            .setTitle(getString(R.string.dialog_title_quit_on_save));
+                    builder.setPositiveButton("Yes", (dialog, id) -> finish());
+                    builder.setNegativeButton("No", (dialog, id) -> {
+                    });
+                    AlertDialog dialog = builder.create();
+                    dialog.show();
+                }
 
                 return true;
             case R.id.cancelImageButton:
@@ -173,29 +197,44 @@ public class DrawActivity extends AppCompatActivity {
         }
     }
 
-    private void saveImage() {
-        File storageDirectory = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES).getPath()
-                + "/Drawy");
+    @Override
+    public void onRequestPermissionsResult(int requestCode,
+                                           @NonNull String[] permissions,
+                                           @NonNull int[] grantResults) {
+
+        switch (requestCode) {
+            case WRITE_EXTERNAL_STORAGE_PERMISSION_RETURN_CODE:
+                writeExternalStoragePermission = true;
+                break;
+        }
+    }
+
+    private Boolean saveImage() {
+        File storageDirectory = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES), "Drawy");
 
         if (!storageDirectory.exists()) {
             if (!storageDirectory.mkdirs())
-                return;
+                return false;
         }
 
-        String timestamp = SimpleDateFormat.getDateTimeInstance().format(new Date());
+        @SuppressLint("SimpleDateFormat")
+        String timestamp = new SimpleDateFormat("yyyyMMdd_HHmm").format(new Date());
+
         File mediaFile;
         String imageName = "drawy_" + timestamp + ".png";
         mediaFile = new File(storageDirectory.getPath() + File.separator + imageName);
 
         try (FileOutputStream fos = new FileOutputStream(mediaFile)) {
-            drawView.getBitmap().compress(Bitmap.CompressFormat.PNG, 90, fos);
+            drawView.getDrawing().compress(Bitmap.CompressFormat.PNG, 90, fos);
         } catch (FileNotFoundException e) {
-            Toast.makeText(this, "Something bad happened while saving the image...", Toast.LENGTH_SHORT).show();
+            return false;
         } catch (IOException e) {
-            Toast.makeText(this, "Something bad happened while saving the image...", Toast.LENGTH_SHORT).show();
+            return false;
         }
 
         Toast.makeText(this, "Drawing saved at " + mediaFile.getPath(), Toast.LENGTH_LONG).show();
+
+        return true;
     }
 
     private void showFileChooser() {
