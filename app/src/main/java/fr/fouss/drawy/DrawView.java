@@ -19,7 +19,7 @@ public class DrawView extends View {
     ///// GENERAL /////
 
     private Bitmap drawing;
-    private Canvas canvas;
+    private Canvas drawingCanvas;
     private Paint paint;
     private Mode mode = Mode.BRUSH;
     private float lastX = -1;
@@ -69,7 +69,7 @@ public class DrawView extends View {
         paint.setStrokeJoin(Paint.Join.ROUND);
         paint.setStyle(Paint.Style.STROKE);
 
-        canvas = new Canvas(drawing);
+        drawingCanvas = new Canvas(drawing);
 
         shapeX = width/2;
         shapeY = height/2;
@@ -122,8 +122,8 @@ public class DrawView extends View {
     public void setMode(Mode mode) {
         this.mode = mode;
         if (mode == Mode.SHAPE || mode == Mode.IMAGE) {
-            shapeX = canvas.getWidth()/2;
-            shapeY = canvas.getHeight()/2;
+            shapeX = drawingCanvas.getWidth()/2;
+            shapeY = drawingCanvas.getHeight()/2;
         }
     }
 
@@ -135,13 +135,13 @@ public class DrawView extends View {
 
     public void anchorShape() {
         if (mode == Mode.SHAPE) {
-            drawShape(canvas);
+            drawShape(drawingCanvas);
         }
     }
 
     public void anchorImage() {
         if (mode == Mode.IMAGE) {
-            drawImage(canvas);
+            drawImage(drawingCanvas);
         }
     }
 
@@ -218,9 +218,9 @@ public class DrawView extends View {
             float y = event.getY();
             brushPath.quadTo(lastX, lastY, (x + lastX)/2, (y + lastY)/2);
             if (!validPath) {
-                canvas.drawPoint(x, y, paint);
+                drawingCanvas.drawPoint(x, y, paint);
             } else {
-                canvas.drawPath(brushPath, paint);
+                drawingCanvas.drawPath(brushPath, paint);
                 validPath = false;
             }
             brushPath.reset();
