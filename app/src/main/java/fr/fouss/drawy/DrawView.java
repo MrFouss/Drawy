@@ -3,44 +3,93 @@ package fr.fouss.drawy;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
+import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.Path;
 import android.util.AttributeSet;
 import android.util.DisplayMetrics;
 import android.util.Log;
-import android.util.TypedValue;
 import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
 import android.view.View;
 
 public class DrawView extends View {
+
+    ///// FIELDS /////
+
+    ///// GENERAL /////
+
     private Bitmap drawing;
-    private Canvas canvas;
+    private Canvas drawingCanvas;
     private Paint paint;
-    private Mode mode;
+    private Mode mode = Mode.BRUSH;
+    private float lastX = -1;
+    private float lastY = -1;
 
-    private float lastX, lastY;
-    private Path brushPath;
-    private boolean validPath;
+    ///// BRUSH /////
 
-    private Shape currShape;
-    private float shapeScaleX, shapeScaleY, shapeScale;
-    private float shapeX, shapeY;
-    private boolean pointer1Down, pointer2Down;
-    private int pointer1Id, pointer2Id;
-    private boolean scaling;
-    private int fingerNbr;
-
-    public enum Mode {BRUSH, SHAPE}
-    public enum Shape {CIRCLE, SQUARE}
-
+    private Path brushPath = new Path();
     private static final float TOUCH_TOLERANCE = 4;
+    private boolean validPath = false;
 
+    ///// IMAGE /////
+
+    private Bitmap currImage = null;
+    private float imageX;
+    private float imageY;
+    private float imageScale = 1;
+    private int pointer1Id = -1;
+    private int pointer2Id = -1;
+    private Vector2D initPointer1 = new Vector2D();
+    private Vector2D currPointer1 = new Vector2D();
+    private Vector2D initPointer2 = new Vector2D();
+    private Vector2D currPointer2 = new Vector2D();
+    private float pointer1IdX = -1;
+    private float pointer1IdY = -1;
+    private float pointer2IdX = -1;
+    private float pointer2IdY = -1;
+    private boolean scaling = false;
     private ScaleGestureDetector scaleDetector;
+
+    ///// ENUMS /////
+
+    public enum Mode {BRUSH, IMAGE}
+
+    ///// CONSTRUCTOR /////
 
     public DrawView(Context context, AttributeSet attrs) {
         super(context, attrs);
         initView(context);
+    }
+
+    private void initView(Context context) {
+        DisplayMetrics metrics = context.getResources().getDisplayMetrics();
+        int width = metrics.widthPixels;
+        int height = metrics.heightPixels;
+
+        drawing = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_4444);
+        drawing.eraseColor(0xffffffff);
+
+        paint = new Paint();
+        paint.setColor(0xff000000);
+        paint.setStrokeWidth(20.0f);
+        paint.setStrokeCap(Paint.Cap.ROUND);
+        paint.setStrokeJoin(Paint.Join.ROUND);
+        paint.setStyle(Paint.Style.STROKE);
+
+        drawingCanvas = new Canvas(drawing);
+
+        imageX = width/2;
+        imageY = height/2;
+
+        scaleDetector = new ScaleGestureDetector(context, new ScaleListener());
+    }
+
+    ///// GENERAL /////
+
+
+    public Bitmap getDrawing() {
+        return drawing;
     }
 
     public void resetCanvas(int color) {
@@ -67,11 +116,21 @@ public class DrawView extends View {
         return (int) paint.getStrokeWidth();
     }
 
+    public Bitmap getImage() {
+        return currImage;
+    }
+
+    public void setImage(Bitmap image) {
+        this.currImage = image;
+        invalidate();
+    }
+
     public void setMode(Mode mode) {
         this.mode = mode;
-        if (mode == Mode.SHAPE) {
-            shapeX = canvas.getWidth()/2;
-            shapeY = canvas.getHeight()/2;
+        if (mode == Mode.IMAGE) {
+            imageScale = 1;
+            imageX = drawingCanvas.getWidth()/2;
+            imageY = drawingCanvas.getHeight()/2;
         }
     }
 
@@ -79,55 +138,12 @@ public class DrawView extends View {
         return this.mode;
     }
 
-    public void anchorShape() {
-        if (mode == Mode.SHAPE) {
-            drawShape(canvas);
+    ///// DRAW METHODS /////
+
+    public void anchorImage() {
+        if (mode == Mode.IMAGE) {
+            drawImage(drawingCanvas);
         }
-    }
-
-    private void initView(Context context) {
-        DisplayMetrics metrics = context.getResources().getDisplayMetrics();
-        int width = metrics.widthPixels;
-        int height = metrics.heightPixels;
-
-        drawing = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_4444);
-        drawing.eraseColor(0xffffffff);
-
-        paint = new Paint();
-        paint.setColor(0xff000000);
-        paint.setStrokeWidth(20.0f);
-        paint.setStrokeCap(Paint.Cap.ROUND);
-        paint.setStrokeJoin(Paint.Join.ROUND);
-        paint.setStyle(Paint.Style.STROKE);
-
-        canvas = new Canvas(drawing);
-
-        lastX = -1;
-        lastY = -1;
-
-        setMode(Mode.BRUSH);
-
-        currShape = Shape.CIRCLE;
-        shapeScaleX = 1;
-        shapeScaleY = 1;
-        shapeX = width/2;
-        shapeY = height/2;
-        shapeScale = 1;
-
-        scaleDetector = new ScaleGestureDetector(context, new ScaleListener());
-
-        brushPath = new Path();
-
-        pointer1Down = false;
-        pointer2Down = false;
-
-        pointer1Id = -1;
-        pointer2Id = -1;
-
-        scaling = false;
-        fingerNbr = 0;
-
-        validPath = false;
     }
 
     @Override
@@ -135,33 +151,28 @@ public class DrawView extends View {
         super.onDraw(canvas);
         canvas.drawBitmap(drawing, 0, 0, null);
         canvas.drawPath(brushPath, paint);
-        canvas.drawPoint(lastX, lastY, paint);
-        drawShape(canvas);
+        drawImage(canvas);
     }
 
-    private void drawShape(Canvas canvas) {
-        if (mode == Mode.SHAPE) {
-            switch (currShape) {
-                case CIRCLE:
-                    canvas.drawCircle(shapeX, shapeY, 150*shapeScale, paint);
-                case SQUARE:
-                    canvas.drawRect(-150, -150, 150, 150, paint);
-            }
+    private void drawImage(Canvas canvas) {
+        Paint tmpPaint = new Paint();
+        if (mode == Mode.IMAGE && currImage != null) {
+            Matrix transform = new Matrix();
+            transform.postTranslate(imageX -currImage.getWidth()/2,
+                    imageY -currImage.getHeight()/2);
+            transform.postScale(imageScale, imageScale, imageX, imageY);
+            canvas.drawBitmap(currImage, transform, tmpPaint);
         }
     }
 
+    ///// EVENTS /////
+
     @Override
     public boolean onTouchEvent(MotionEvent event) {
-//        Log.d("DrawView", "onTouchEvent: drawing type : "
-//                + event.getAction()
-//                + " ; position : "
-//                + event.getX()
-//                + ";"
-//                + event.getY());
         if (mode == Mode.BRUSH) {
             return onTouchEventBrush(event);
-        } else if (mode == Mode.SHAPE) {
-            return onTouchEventShape(event);
+        } else if (mode == Mode.IMAGE) {
+            return onTouchEventShapeAndImage(event);
         } else {
             return super.onTouchEvent(event);
         }
@@ -192,13 +203,11 @@ public class DrawView extends View {
         } else if (event.getAction() == MotionEvent.ACTION_UP) {
             float x = event.getX();
             float y = event.getY();
-            float dx = Math.abs(x - lastX);
-            float dy = Math.abs(y - lastY);
             brushPath.quadTo(lastX, lastY, (x + lastX)/2, (y + lastY)/2);
-            canvas.drawPath(brushPath, paint);
             if (!validPath) {
-                canvas.drawPoint(x, y, paint);
+                drawingCanvas.drawPoint(x, y, paint);
             } else {
+                drawingCanvas.drawPath(brushPath, paint);
                 validPath = false;
             }
             brushPath.reset();
@@ -211,50 +220,66 @@ public class DrawView extends View {
         }
     }
 
-    public boolean onTouchEventShape(MotionEvent event) {
+    public boolean onTouchEventShapeAndImage(MotionEvent event) {
         int index = event.getActionIndex();
         int id = event.getPointerId(index);
 
+        // check if in scaling mode
         if (event.getPointerCount() > 1) {
-//            Log.i("DrawView", "Start scaling");
             scaling = true;
+            // retrieve 2nd finger id and position
+            if (event.getActionMasked() == MotionEvent.ACTION_POINTER_DOWN && pointer2Id == -1) {
+                pointer2Id = id;
+                initPointer2.x = event.getX(pointer2Id);
+                initPointer2.y = event.getY(pointer2Id);
+            } else if (event.getActionMasked() == MotionEvent.ACTION_MOVE && id == pointer2Id) {
+                currPointer2.x = event.getX(pointer2Id);
+                currPointer2.y = event.getY(pointer2Id);
+            }
         } else if (event.getActionMasked() == MotionEvent.ACTION_UP) {
-//            Log.i("DrawView", "Stop scaling");
+            // if the last finger is lifted update shape position/toggle false scaling
             if (!scaling) {
-                lastX = shapeX;
-                lastY = shapeY;
+                lastX = imageX;
+                lastY = imageY;
             }
             scaling = false;
             return true;
         }
 
+
         if (scaling) {
-//            Log.i("DrawView", "Scaling");
-            shapeX = lastX;
-            shapeY = lastY;
+            Log.i("DrawView", "angle : " +
+                    Vector2D.getSignedAngleBetween(
+                            Vector2D.getDiff(initPointer2, initPointer1),
+                            Vector2D.getDiff(currPointer2, currPointer1)
+                    )
+            );
+            imageX = lastX;
+            imageY = lastY;
             scaleDetector.onTouchEvent(event);
             invalidate();
             return true;
         } else if (event.getActionMasked() == MotionEvent.ACTION_DOWN) {
-//            Log.i("DrawView", "Init move");
             pointer1Id = id;
+            pointer2Id = -1;
             float x = event.getX(pointer1Id);
             float y = event.getY(pointer1Id);
-            lastX = shapeX;
-            lastY = shapeY;
-            shapeX = x;
-            shapeY = y;
+            initPointer1.x = event.getX(pointer1Id);
+            initPointer1.y = event.getY(pointer1Id);
+            lastX = imageX;
+            lastY = imageY;
+            imageX = x;
+            imageY = y;
             invalidate();
             return true;
-        } else if (event.getActionMasked() == MotionEvent.ACTION_MOVE) {
-            if (id == pointer1Id) {
-//                Log.i("DrawView", "Move");
-                float x = event.getX(pointer1Id);
-                float y = event.getY(pointer1Id);
-                shapeX = x;
-                shapeY = y;
-                invalidate();
-            }
+        } else if (event.getActionMasked() == MotionEvent.ACTION_MOVE && id == pointer1Id) {
+            float x = event.getX(pointer1Id);
+            float y = event.getY(pointer1Id);
+            currPointer1.x = event.getX(pointer1Id);
+            currPointer1.y = event.getY(pointer1Id);
+            imageX = x;
+            imageY = y;
+            invalidate();
             return true;
         }
 
@@ -262,21 +287,54 @@ public class DrawView extends View {
     }
 
     private class ScaleListener extends ScaleGestureDetector.SimpleOnScaleGestureListener {
-
         @Override
         public boolean onScale(ScaleGestureDetector detector) {
-            if (detector.getPreviousSpanX() == 0) {
-                shapeScaleX *= 1;
-            } else {
-                shapeScaleX *= detector.getCurrentSpanX()/detector.getPreviousSpanX();
-            }
-            if (detector.getPreviousSpanY() == 0) {
-                shapeScaleY *= 1;
-            } else {
-                shapeScaleY *= detector.getCurrentSpanY()/detector.getPreviousSpanY();
-            }
-            shapeScale *= detector.getScaleFactor();
+            imageScale *= detector.getScaleFactor();
             return true;
+        }
+    }
+
+    public static class Vector2D {
+        public float x;
+        public float y;
+
+        public Vector2D(float x, float y) {
+            this.x = x;
+            this.y = y;
+        }
+
+        public Vector2D() {
+            this.x = 0;
+            this.y = 0;
+        }
+
+        /**
+         * a - b
+         * @param a
+         * @param b
+         * @return
+         */
+        public static Vector2D getDiff(Vector2D a, Vector2D b) {
+            return new Vector2D(a.x - b.x, a.y - b.y);
+        }
+
+        public float getLength() {
+            return (float)Math.sqrt(x*x + y*y);
+        }
+
+        public static Vector2D getNormalized(Vector2D v) {
+            float l = v.getLength();
+            if (l == 0)
+                return new Vector2D();
+            else
+                return new Vector2D(v.x / l, v.y / l);
+        }
+
+        public static float getSignedAngleBetween(Vector2D a, Vector2D b) {
+            Vector2D na = getNormalized(a);
+            Vector2D nb = getNormalized(b);
+
+            return (float)(Math.atan2(nb.y, nb.x) - Math.atan2(na.y, na.x));
         }
     }
 
