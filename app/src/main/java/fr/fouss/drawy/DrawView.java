@@ -44,6 +44,8 @@ public class DrawView extends View {
     private Vector2D currPointer1 = new Vector2D();
     private Vector2D initPointer2 = new Vector2D();
     private Vector2D currPointer2 = new Vector2D();
+    private float angle = 0;
+    private float tmpAngle = 0;
     private float pointer1IdX = -1;
     private float pointer1IdY = -1;
     private float pointer2IdX = -1;
@@ -129,6 +131,7 @@ public class DrawView extends View {
         this.mode = mode;
         if (mode == Mode.IMAGE) {
             imageScale = 1;
+            angle = 0;
             imageX = drawingCanvas.getWidth()/2;
             imageY = drawingCanvas.getHeight()/2;
         }
@@ -160,6 +163,7 @@ public class DrawView extends View {
             Matrix transform = new Matrix();
             transform.postTranslate(imageX -currImage.getWidth()/2,
                     imageY -currImage.getHeight()/2);
+            transform.postRotate((float)Math.toDegrees(tmpAngle+angle), imageX, imageY);
             transform.postScale(imageScale, imageScale, imageX, imageY);
             canvas.drawBitmap(currImage, transform, tmpPaint);
         }
@@ -232,7 +236,12 @@ public class DrawView extends View {
                 pointer2Id = id;
                 initPointer2.x = event.getX(pointer2Id);
                 initPointer2.y = event.getY(pointer2Id);
-            } else if (event.getActionMasked() == MotionEvent.ACTION_MOVE && id == pointer2Id) {
+                currPointer2.x = event.getX(pointer2Id);
+                currPointer2.y = event.getY(pointer2Id);
+            } else if (event.getActionMasked() == MotionEvent.ACTION_MOVE) {
+                // retrieve movements
+                currPointer1.x = event.getX(pointer1Id);
+                currPointer1.y = event.getY(pointer1Id);
                 currPointer2.x = event.getX(pointer2Id);
                 currPointer2.y = event.getY(pointer2Id);
             }
@@ -242,17 +251,17 @@ public class DrawView extends View {
                 lastX = imageX;
                 lastY = imageY;
             }
+            angle += tmpAngle;
+            tmpAngle = 0;
             scaling = false;
             return true;
         }
 
 
         if (scaling) {
-            Log.i("DrawView", "angle : " +
-                    Vector2D.getSignedAngleBetween(
-                            Vector2D.getDiff(initPointer2, initPointer1),
-                            Vector2D.getDiff(currPointer2, currPointer1)
-                    )
+            tmpAngle = Vector2D.getSignedAngleBetween(
+                    Vector2D.getDiff(initPointer2, initPointer1),
+                    Vector2D.getDiff(currPointer2, currPointer1)
             );
             imageX = lastX;
             imageY = lastY;
@@ -260,12 +269,15 @@ public class DrawView extends View {
             invalidate();
             return true;
         } else if (event.getActionMasked() == MotionEvent.ACTION_DOWN) {
+            tmpAngle = 0;
             pointer1Id = id;
             pointer2Id = -1;
             float x = event.getX(pointer1Id);
             float y = event.getY(pointer1Id);
             initPointer1.x = event.getX(pointer1Id);
             initPointer1.y = event.getY(pointer1Id);
+            currPointer1.x = event.getX(pointer1Id);
+            currPointer1.y = event.getY(pointer1Id);
             lastX = imageX;
             lastY = imageY;
             imageX = x;
@@ -275,8 +287,6 @@ public class DrawView extends View {
         } else if (event.getActionMasked() == MotionEvent.ACTION_MOVE && id == pointer1Id) {
             float x = event.getX(pointer1Id);
             float y = event.getY(pointer1Id);
-            currPointer1.x = event.getX(pointer1Id);
-            currPointer1.y = event.getY(pointer1Id);
             imageX = x;
             imageY = y;
             invalidate();
@@ -335,6 +345,11 @@ public class DrawView extends View {
             Vector2D nb = getNormalized(b);
 
             return (float)(Math.atan2(nb.y, nb.x) - Math.atan2(na.y, na.x));
+        }
+
+        @Override
+        public String toString() {
+            return "(" + x + ";" + y + ")";
         }
     }
 
