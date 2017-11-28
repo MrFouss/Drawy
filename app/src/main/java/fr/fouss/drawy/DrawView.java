@@ -133,10 +133,14 @@ public class DrawView extends View {
 
     ///// DRAW METHODS /////
 
-    public void anchor() {
+    public void anchorShape() {
         if (mode == Mode.SHAPE) {
             drawShape(canvas);
-        } else if (mode == Mode.IMAGE) {
+        }
+    }
+
+    public void anchorImage() {
+        if (mode == Mode.IMAGE) {
             drawImage(canvas);
         }
     }
