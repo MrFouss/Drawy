@@ -130,6 +130,7 @@ public class DrawView extends View {
             imageX = drawingCanvas.getWidth()/2;
             imageY = drawingCanvas.getHeight()/2;
         }
+        invalidate();
     }
 
     public Mode getMode() {

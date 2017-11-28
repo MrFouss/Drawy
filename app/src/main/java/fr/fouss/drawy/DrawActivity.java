@@ -260,10 +260,6 @@ public class DrawActivity extends AppCompatActivity {
         switch (requestCode) {
             case FILE_SELECTION_CODE:
                 if (resultCode == RESULT_OK && data.getData() != null) {
-                    Toast.makeText(this,
-                            "Image URI: " + data.getDataString(),
-                            Toast.LENGTH_SHORT).show();
-
                     try {
                         Bitmap image = MediaStore.Images.Media.getBitmap(getContentResolver(), data.getData());
                         drawView.setImage(image);
