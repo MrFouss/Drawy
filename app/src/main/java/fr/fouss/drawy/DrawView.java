@@ -26,26 +26,24 @@ public class DrawView extends View {
     private float lastY = -1;
 
     ///// BRUSH /////
+
     private Path brushPath = new Path();
     private static final float TOUCH_TOLERANCE = 4;
-
     private boolean validPath = false;
 
-    ///// SHAPE / IMAGE /////
-    private Shape currShape = Shape.CIRCLE;
+    ///// IMAGE /////
+
     private Bitmap currImage = null;
-    private float shapeX;
-    private float shapeY;
-    private float shapeScale = 1;
+    private float imageX;
+    private float imageY;
+    private float imageScale = 1;
     private int pointer1Id = -1;
     private boolean scaling = false;
     private ScaleGestureDetector scaleDetector;
 
     ///// ENUMS /////
 
-    public enum Mode {BRUSH, SHAPE, IMAGE}
-
-    public enum Shape {CIRCLE, SQUARE}
+    public enum Mode {BRUSH, IMAGE}
 
     ///// CONSTRUCTOR /////
 
@@ -71,8 +69,8 @@ public class DrawView extends View {
 
         drawingCanvas = new Canvas(drawing);
 
-        shapeX = width/2;
-        shapeY = height/2;
+        imageX = width/2;
+        imageY = height/2;
 
         scaleDetector = new ScaleGestureDetector(context, new ScaleListener());
     }
@@ -103,27 +101,21 @@ public class DrawView extends View {
         return (int) paint.getStrokeWidth();
     }
 
-    public Shape getShape() {
-        return currShape;
-    }
-
-    public void setShape(Shape shape) {
-        this.currShape = shape;
-    }
-
     public Bitmap getImage() {
         return currImage;
     }
 
     public void setImage(Bitmap image) {
         this.currImage = image;
+        invalidate();
     }
 
     public void setMode(Mode mode) {
         this.mode = mode;
-        if (mode == Mode.SHAPE || mode == Mode.IMAGE) {
-            shapeX = drawingCanvas.getWidth()/2;
-            shapeY = drawingCanvas.getHeight()/2;
+        if (mode == Mode.IMAGE) {
+            imageScale = 1;
+            imageX = drawingCanvas.getWidth()/2;
+            imageY = drawingCanvas.getHeight()/2;
         }
     }
 
@@ -132,12 +124,6 @@ public class DrawView extends View {
     }
 
     ///// DRAW METHODS /////
-
-    public void anchorShape() {
-        if (mode == Mode.SHAPE) {
-            drawShape(drawingCanvas);
-        }
-    }
 
     public void anchorImage() {
         if (mode == Mode.IMAGE) {
@@ -150,31 +136,17 @@ public class DrawView extends View {
         super.onDraw(canvas);
         canvas.drawBitmap(drawing, 0, 0, null);
         canvas.drawPath(brushPath, paint);
-        canvas.drawPoint(lastX, lastY, paint);
-        drawShape(canvas);
         drawImage(canvas);
     }
 
-    private void drawShape(Canvas canvas) {
-        if (mode == Mode.SHAPE) {
-            switch (currShape) {
-                case CIRCLE:
-                    canvas.drawCircle(shapeX, shapeY, 150*shapeScale, paint);
-                case SQUARE:
-                    canvas.drawRect(shapeX-150*shapeScale, shapeY-150*shapeScale,
-                            shapeX+150*shapeScale, shapeY+150*shapeScale, paint);
-            }
-        }
-    }
-
     private void drawImage(Canvas canvas) {
+        Paint tmpPaint = new Paint();
         if (mode == Mode.IMAGE && currImage != null) {
-            // TODO debug transform
             Matrix transform = new Matrix();
-            transform.postTranslate(shapeX-currImage.getWidth()/2,
-                    shapeY-currImage.getHeight()/2);
-            transform.postScale(shapeScale, shapeScale, shapeX, shapeY);
-            canvas.drawBitmap(currImage, transform, paint);
+            transform.postTranslate(imageX -currImage.getWidth()/2,
+                    imageY -currImage.getHeight()/2);
+            transform.postScale(imageScale, imageScale, imageX, imageY);
+            canvas.drawBitmap(currImage, transform, tmpPaint);
         }
     }
 
@@ -184,7 +156,7 @@ public class DrawView extends View {
     public boolean onTouchEvent(MotionEvent event) {
         if (mode == Mode.BRUSH) {
             return onTouchEventBrush(event);
-        } else if (mode == Mode.SHAPE || mode == Mode.IMAGE) {
+        } else if (mode == Mode.IMAGE) {
             return onTouchEventShapeAndImage(event);
         } else {
             return super.onTouchEvent(event);
@@ -243,16 +215,16 @@ public class DrawView extends View {
         } else if (event.getActionMasked() == MotionEvent.ACTION_UP) {
             // if the last finger is lifted update shape position/toggle false scaling
             if (!scaling) {
-                lastX = shapeX;
-                lastY = shapeY;
+                lastX = imageX;
+                lastY = imageY;
             }
             scaling = false;
             return true;
         }
 
         if (scaling) {
-            shapeX = lastX;
-            shapeY = lastY;
+            imageX = lastX;
+            imageY = lastY;
             scaleDetector.onTouchEvent(event);
             invalidate();
             return true;
@@ -260,17 +232,17 @@ public class DrawView extends View {
             pointer1Id = id;
             float x = event.getX(pointer1Id);
             float y = event.getY(pointer1Id);
-            lastX = shapeX;
-            lastY = shapeY;
-            shapeX = x;
-            shapeY = y;
+            lastX = imageX;
+            lastY = imageY;
+            imageX = x;
+            imageY = y;
             invalidate();
             return true;
         } else if (event.getActionMasked() == MotionEvent.ACTION_MOVE && id == pointer1Id) {
             float x = event.getX(pointer1Id);
             float y = event.getY(pointer1Id);
-            shapeX = x;
-            shapeY = y;
+            imageX = x;
+            imageY = y;
             invalidate();
             return true;
         }
@@ -281,7 +253,7 @@ public class DrawView extends View {
     private class ScaleListener extends ScaleGestureDetector.SimpleOnScaleGestureListener {
         @Override
         public boolean onScale(ScaleGestureDetector detector) {
-            shapeScale *= detector.getScaleFactor();
+            imageScale *= detector.getScaleFactor();
             return true;
         }
     }

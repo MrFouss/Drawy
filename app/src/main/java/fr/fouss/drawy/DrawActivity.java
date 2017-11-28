@@ -1,6 +1,7 @@
 package fr.fouss.drawy;
 
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
@@ -134,6 +135,7 @@ public class DrawActivity extends AppCompatActivity {
 
                 return true;
             case R.id.confirmImageButton:
+                drawView.anchorImage();
                 drawView.setMode(DrawView.Mode.BRUSH);
 
                 toolbarColorButton.setVisible(true);
@@ -176,7 +178,14 @@ public class DrawActivity extends AppCompatActivity {
                             "Image URI: " + data.getDataString(),
                             Toast.LENGTH_SHORT).show();
 
-                    drawView.setMode(DrawView.Mode.SHAPE);
+                    try {
+                        Bitmap image = MediaStore.Images.Media.getBitmap(getContentResolver(), data.getData());
+                        drawView.setImage(image);
+                    } catch (IOException e) {
+                        return;
+                    }
+
+                    drawView.setMode(DrawView.Mode.IMAGE);
 
                     toolbarColorButton.setVisible(false);
                     toolbarThicknessButton.setVisible(false);
