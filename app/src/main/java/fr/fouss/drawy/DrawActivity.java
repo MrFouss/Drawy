@@ -1,9 +1,12 @@
 package fr.fouss.drawy;
 
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
 import android.provider.MediaStore;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.TypedValue;
@@ -17,8 +20,12 @@ import android.widget.Toast;
 import com.flask.colorpicker.ColorPickerView;
 import com.flask.colorpicker.builder.ColorPickerDialogBuilder;
 
+import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 public class DrawActivity extends AppCompatActivity {
 
@@ -28,6 +35,7 @@ public class DrawActivity extends AppCompatActivity {
     private MenuItem toolbarColorButton;
     private MenuItem toolbarThicknessButton;
     private MenuItem toolbarInsertImageButton;
+    private MenuItem toolbarSaveImageButton;
     private MenuItem toolbarCancelImageButton;
     private MenuItem toolbarConfirmImageButton;
     private LinearLayout thicknessContainer;
@@ -89,6 +97,7 @@ public class DrawActivity extends AppCompatActivity {
         toolbarColorButton = menu.findItem(R.id.colorButton);
         toolbarThicknessButton = menu.findItem(R.id.thicknessButton);
         toolbarInsertImageButton = menu.findItem(R.id.insertImageButton);
+        toolbarSaveImageButton = menu.findItem(R.id.saveImageButton);
         toolbarCancelImageButton = menu.findItem(R.id.cancelImageButton);
         toolbarConfirmImageButton = menu.findItem(R.id.confirmImageButton);
 
@@ -122,12 +131,25 @@ public class DrawActivity extends AppCompatActivity {
             case R.id.insertImageButton:
                 showFileChooser();
                 return true;
+            case R.id.saveImageButton:
+                saveImage();
+
+                AlertDialog.Builder builder = new AlertDialog.Builder(this);
+                builder.setMessage(getString(R.string.dialog_content_quit_on_save))
+                        .setTitle(getString(R.string.dialog_title_quit_on_save));
+                builder.setPositiveButton("Yes", (dialog, id) -> finish());
+                builder.setNegativeButton("No", (dialog, id) -> {});
+                AlertDialog dialog = builder.create();
+                dialog.show();
+
+                return true;
             case R.id.cancelImageButton:
                 drawView.setMode(DrawView.Mode.BRUSH);
 
                 toolbarColorButton.setVisible(true);
                 toolbarThicknessButton.setVisible(true);
                 toolbarInsertImageButton.setVisible(true);
+                toolbarSaveImageButton.setVisible(true);
 
                 toolbarCancelImageButton.setVisible(false);
                 toolbarConfirmImageButton.setVisible(false);
@@ -139,6 +161,7 @@ public class DrawActivity extends AppCompatActivity {
                 toolbarColorButton.setVisible(true);
                 toolbarThicknessButton.setVisible(true);
                 toolbarInsertImageButton.setVisible(true);
+                toolbarSaveImageButton.setVisible(true);
 
                 toolbarCancelImageButton.setVisible(false);
                 toolbarConfirmImageButton.setVisible(false);
@@ -147,6 +170,31 @@ public class DrawActivity extends AppCompatActivity {
             default :
                 return super.onOptionsItemSelected(item);
         }
+    }
+
+    private void saveImage() {
+        File storageDirectory = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES).getPath()
+                + "/Drawy");
+
+        if (!storageDirectory.exists()) {
+            if (!storageDirectory.mkdirs())
+                return;
+        }
+
+        String timestamp = SimpleDateFormat.getDateTimeInstance().format(new Date());
+        File mediaFile;
+        String imageName = "drawy_" + timestamp + ".png";
+        mediaFile = new File(storageDirectory.getPath() + File.separator + imageName);
+
+        try (FileOutputStream fos = new FileOutputStream(mediaFile)) {
+            drawView.getBitmap().compress(Bitmap.CompressFormat.PNG, 90, fos);
+        } catch (FileNotFoundException e) {
+            Toast.makeText(this, "Something bad happened while saving the image...", Toast.LENGTH_SHORT).show();
+        } catch (IOException e) {
+            Toast.makeText(this, "Something bad happened while saving the image...", Toast.LENGTH_SHORT).show();
+        }
+
+        Toast.makeText(this, "Drawing saved at " + mediaFile.getPath(), Toast.LENGTH_LONG).show();
     }
 
     private void showFileChooser() {
@@ -181,6 +229,7 @@ public class DrawActivity extends AppCompatActivity {
                     toolbarColorButton.setVisible(false);
                     toolbarThicknessButton.setVisible(false);
                     toolbarInsertImageButton.setVisible(false);
+                    toolbarSaveImageButton.setVisible(false);
 
                     toolbarCancelImageButton.setVisible(true);
                     toolbarConfirmImageButton.setVisible(true);

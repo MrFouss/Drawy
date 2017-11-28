@@ -15,4 +15,7 @@
     <string name="toolbarConfirmImage">Confirm image position</string>
 
     <string name="thicknessLabel">Thickness</string>
+    <string name="toolbarSaveImage">Save image</string>
+    <string name="dialog_content_quit_on_save">Do you want to go back to the main menu?</string>
+    <string name="dialog_title_quit_on_save">Leave this drawing?</string>
 </resources>

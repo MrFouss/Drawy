@@ -20,6 +20,12 @@
         android:title="@string/toolbarInsertImage"
         android:visible="true"
         app:showAsAction="ifRoom" />
+    <item
+        android:id="@+id/saveImageButton"
+        android:icon="@drawable/ic_save"
+        android:title="@string/toolbarSaveImage"
+        android:visible="true"
+        app:showAsAction="ifRoom" />
 
     <item
         android:id="@+id/cancelImageButton"
